@@ -3,46 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Collaboration with WebRTC</title>
+    <title>LocalStorage Collaboration</title>
 </head>
 <body>
-    <h2>Real-Time Collaboration Example</h2>
+    <h2>Real-Time Collaboration on One Device</h2>
     <textarea id="editor" rows="10" cols="50"></textarea>
+
     <script>
-        let localConnection;
-        let remoteConnection;
-        let sendChannel;
-        let receiveChannel;
+        // Get the textarea element
+        const editor = document.getElementById('editor');
 
-        // Create local and remote connections
-        localConnection = new RTCPeerConnection();
-        remoteConnection = new RTCPeerConnection();
-
-        // Create a data channel on the local peer
-        sendChannel = localConnection.createDataChannel("sendDataChannel");
-
-        // Setup receive channel on remote peer
-        remoteConnection.ondatachannel = function(event) {
-            receiveChannel = event.channel;
-            receiveChannel.onmessage = (e) => {
-                document.getElementById('editor').value = e.data;
-            };
-        };
-
-        // When text changes, send it to the other peer
-        document.getElementById('editor').addEventListener('input', () => {
-            sendChannel.send(document.getElementById('editor').value);
+        // Listen for changes in the text area and update localStorage
+        editor.addEventListener('input', () => {
+            localStorage.setItem('text', editor.value);  // Save text to localStorage
         });
 
-        // Create an offer and set it to establish the connection
-        localConnection.createOffer().then(offer => {
-            localConnection.setLocalDescription(offer);
-            remoteConnection.setRemoteDescription(offer);
-            return remoteConnection.createAnswer();
-        }).then(answer => {
-            remoteConnection.setLocalDescription(answer);
-            localConnection.setRemoteDescription(answer);
-        }).catch(err => console.log(err));
+        // Listen for changes in localStorage across different tabs
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'text') {
+                editor.value = event.newValue;  // Update the textarea when localStorage changes
+            }
+        });
+
+        // Initialize the textarea with existing content from localStorage
+        if (localStorage.getItem('text')) {
+            editor.value = localStorage.getItem('text');
+        }
     </script>
 </body>
 </html>
